@@ -6,9 +6,9 @@
 <title>RupeeDrip – daily rewards</title>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f1f5fa;--card:#fff;--fg:#14213d;--mute:#5b6784;--acc:#12805c;--acc-fg:#fff;--hi:#ffb703;--line:#dbe2ee;--warn:#fff3cd;--warn-fg:#6b4e00;
+:root{--bg:#f1f5fa;--card:#fff;--fg:#14213d;--mute:#5b6784;--acc:#12805c;--acc-fg:#fff;--hi:#ffb703;--line:#dbe2ee;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root{--bg:#0e1522;--card:#17213a;--fg:#eaf0ff;--mute:#9aa8c7;--acc:#2fc08b;--acc-fg:#07281d;--line:#2a3757;--warn:#3a3012;--warn-fg:#ffd966}}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1522;--card:#17213a;--fg:#eaf0ff;--mute:#9aa8c7;--acc:#2fc08b;--acc-fg:#07281d;--line:#2a3757}}
 *,*::before,*::after{box-sizing:inherit}
 body{margin:0;background:var(--bg);color:var(--fg);font-family:Sora,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5}
 .wrap{max-width:30rem;margin:0 auto;padding:16px}
@@ -23,14 +23,15 @@ button,input{font:inherit}
 button{width:100%;border:0;border-radius:14px;padding:14px;font-weight:800;background:var(--acc);color:var(--acc-fg);cursor:pointer}
 button:disabled{opacity:.45;cursor:not-allowed}
 button.ghost{background:transparent;color:var(--fg);border:1px solid var(--line);width:auto;padding:8px 14px;font-weight:600}
+.tabs{display:flex;gap:8px;margin-bottom:12px}
+.tabs button{padding:10px;background:transparent;color:var(--fg);border:1px solid var(--line)}
+.tabs button[aria-pressed="true"]{background:var(--acc);color:var(--acc-fg);border-color:var(--acc)}
 input{width:100%;padding:13px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--fg);margin-bottom:10px}
 button:focus-visible,input:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
-.demo{background:var(--warn);color:var(--warn-fg);border-radius:12px;padding:10px 12px;font-size:.82rem;margin-bottom:14px}
 .ad{border:2px dashed var(--line);border-radius:14px;min-height:90px;display:grid;place-items:center;color:var(--mute);font-size:.85rem;text-align:center;padding:8px}
 ul{list-style:none;margin:0;padding:0}
-li{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:.9rem}
-li span{color:var(--mute)}
-.row{display:flex;gap:10px;align-items:center;justify-content:space-between}
+li{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:.88rem}
+li span{color:var(--mute);text-align:right}
 .msg{min-height:1.2em;font-size:.88rem;margin:8px 0 0;color:var(--acc);font-weight:600}
 .msg.err{color:#d6336c}
 [hidden]{display:none!important}
@@ -39,14 +40,16 @@ li span{color:var(--mute)}
 <body>
 <div class="wrap">
   <header><b>RupeeDrip</b><button class="ghost" id="out" hidden>Log out</button></header>
-  <div class="demo">Demo mode: data is saved only in this browser and can be edited by the user. Connect a real backend (Supabase) before paying real money.</div>
 
   <section id="login" class="card">
-    <h2>Create your account</h2>
-    <p>Claim rewards every 30 minutes and withdraw to UPI.</p>
-    <input id="name" placeholder="Your name" autocomplete="name" maxlength="40">
+    <div class="tabs">
+      <button id="tLogin" aria-pressed="true">Log in</button>
+      <button id="tSign" aria-pressed="false">Sign up</button>
+    </div>
+    <div id="nameRow" hidden><input id="name" placeholder="Your name" autocomplete="name" maxlength="40"></div>
     <input id="email" type="email" placeholder="Email" autocomplete="email" maxlength="80">
-    <button id="go">Start earning</button>
+    <input id="pw" type="password" placeholder="Password (6+ characters)" autocomplete="current-password" maxlength="72">
+    <button id="go">Log in</button>
     <div class="msg err" id="lerr"></div>
   </section>
 
@@ -75,54 +78,83 @@ li span{color:var(--mute)}
     </div>
 
     <div class="card">
-      <h2>Invite friends</h2>
-      <p id="refInfo"></p>
-      <div class="row"><b id="code"></b><button class="ghost" id="copy">Copy link</button></div>
-    </div>
-
-    <div class="card">
-      <h2>History</h2>
+      <h2>Withdrawals</h2>
       <ul id="hist"></ul>
     </div>
   </main>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
 <script>
 (function(){
-  // ====== Settings: change these to match your real ad income ======
-  var CFG={claimPoints:5,cooldownMin:30,dailyCap:20,pointsPerRupee:100,minWithdrawRs:50,referralPct:10};
+  var SB_URL='https://aluonwdmxricptjjshmc.supabase.co';
+  var SB_KEY='sb_publishable_GdCwJeunuMWhOkr0Ef7joQ_EYRY47i4';
+  // Display only. The real rules are enforced in the database.
+  var CFG={claimPoints:5,pointsPerRupee:100,minWithdrawRs:50,dailyCap:20};
 
+  var sb=window.supabase.createClient(SB_URL,SB_KEY);
   var $=function(id){return document.getElementById(id)};
-  var KEY='rupeedrip_v1', S=null;
-  try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
-  function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+  var P=null, mode='login';
   function rs(p){return '₹'+(p/CFG.pointsPerRupee).toFixed(2)}
-  function today(){return new Date().toISOString().slice(0,10)}
-  function log(t,v){S.hist.unshift({t:t,v:v,d:new Date().toLocaleString()});S.hist=S.hist.slice(0,30)}
   function msg(id,t,err){var e=$(id);e.textContent=t;e.className='msg'+(err?' err':'')}
 
-  function show(){
-    var on=!!S;
+  function setMode(m){
+    mode=m;
+    $('nameRow').hidden=m!=='signup';
+    $('go').textContent=m==='signup'?'Create account':'Log in';
+    $('tLogin').setAttribute('aria-pressed',m==='login');
+    $('tSign').setAttribute('aria-pressed',m==='signup');
+    $('pw').autocomplete=m==='signup'?'new-password':'current-password';
+    msg('lerr','');
+  }
+  $('tLogin').onclick=function(){setMode('login')};
+  $('tSign').onclick=function(){setMode('signup')};
+
+  $('go').onclick=async function(){
+    var email=$('email').value.trim(), pw=$('pw').value, name=$('name').value.trim();
+    if(!/^\S+@\S+\.\S+$/.test(email)||pw.length<6) return msg('lerr','Enter a valid email and a password of 6+ characters.',true);
+    if(mode==='signup'&&name.length<2) return msg('lerr','Enter your name.',true);
+    $('go').disabled=true;
+    try{
+      var r=mode==='signup'
+        ? await sb.auth.signUp({email:email,password:pw,options:{data:{name:name}}})
+        : await sb.auth.signInWithPassword({email:email,password:pw});
+      if(r.error) msg('lerr',r.error.message,true);
+      else if(mode==='signup'&&!r.data.session) msg('lerr','Account created. Check your email to confirm, then log in.');
+    }catch(e){msg('lerr','Network problem. Please try again.',true)}
+    $('go').disabled=false;
+  };
+  $('out').onclick=async function(){await sb.auth.signOut()};
+
+  async function refresh(){
+    var s=(await sb.auth.getSession()).data.session, on=!!s;
     $('login').hidden=on; $('app').hidden=!on; $('out').hidden=!on;
-    if(!on) return;
-    $('hi').textContent='Hi, '+S.name;
-    $('rs').textContent=rs(S.points);
-    $('pts').textContent=S.points+' points';
+    if(!on){P=null;return}
+    var r=await sb.from('profiles').select('*').eq('id',s.user.id).single();
+    if(r.error||!r.data){msg('cmsg','Could not load your account. Refresh the page.',true);return}
+    P=r.data;
+    $('hi').textContent='Hi, '+(P.name||'there');
+    $('rs').textContent=rs(P.points);
+    $('pts').textContent=P.points+' points';
     $('wInfo').textContent='Minimum withdrawal ₹'+CFG.minWithdrawRs+'. Requests are reviewed manually.';
-    $('refInfo').textContent='Earn '+CFG.referralPct+'% of what friends earn when they join with your code.';
-    $('code').textContent=S.code;
+    var w=await sb.from('withdrawals').select('*').order('created_at',{ascending:false}).limit(10);
     var h=$('hist'); h.textContent='';
-    if(!S.hist.length){var li=document.createElement('li');li.textContent='No activity yet. Make your first claim.';h.appendChild(li)}
-    S.hist.forEach(function(x){
+    var rows=w.data||[];
+    if(!rows.length){var li=document.createElement('li');li.textContent='No withdrawals yet.';h.appendChild(li)}
+    rows.forEach(function(x){
       var li=document.createElement('li'),a=document.createElement('div'),b=document.createElement('span');
-      a.textContent=x.t; b.textContent=x.v+' · '+x.d; li.append(a,b); h.appendChild(li);
+      a.textContent='₹'+Number(x.amount_rs).toFixed(2)+' to '+x.upi;
+      b.textContent=x.status+' · '+new Date(x.created_at).toLocaleDateString();
+      li.append(a,b); h.appendChild(li);
     });
     tick();
   }
 
   function tick(){
-    if(!S) return;
-    var left=Math.max(0,S.next-Date.now()), used=S.day===today()?S.count:0, b=$('claim');
+    if(!P) return;
+    var today=new Date().toISOString().slice(0,10);
+    var used=P.claim_day===today?P.claims_today:0, b=$('claim');
+    var left=Math.max(0,new Date(P.next_claim).getTime()-Date.now());
     $('claimInfo').textContent='+'+CFG.claimPoints+' points ('+rs(CFG.claimPoints)+') per claim. Today: '+used+'/'+CFG.dailyCap+'.';
     if(used>=CFG.dailyCap){b.disabled=true;b.textContent='Daily limit reached';return}
     if(left>0){var m=Math.floor(left/60000),s=Math.floor(left%60000/1000);b.disabled=true;b.textContent='Next claim in '+m+':'+String(s).padStart(2,'0')}
@@ -130,37 +162,32 @@ li span{color:var(--mute)}
   }
   setInterval(tick,1000);
 
-  $('go').onclick=function(){
-    var n=$('name').value.trim(), e=$('email').value.trim();
-    if(n.length<2||!/^\S+@\S+\.\S+$/.test(e)){msg('lerr','Enter your name and a valid email.',true);return}
-    S={name:n,email:e,points:0,next:0,day:today(),count:0,hist:[],code:'RD'+Math.random().toString(36).slice(2,8).toUpperCase()};
-    save(); show();
-  };
-  $('out').onclick=function(){S=null;try{localStorage.removeItem(KEY)}catch(e){}show()};
-
-  $('claim').onclick=function(){
-    if(S.day!==today()){S.day=today();S.count=0}
-    if(Date.now()<S.next||S.count>=CFG.dailyCap) return;
-    S.points+=CFG.claimPoints; S.count++; S.next=Date.now()+CFG.cooldownMin*60000;
-    log('Claim','+'+CFG.claimPoints+' pts'); save(); show(); msg('cmsg','Added '+CFG.claimPoints+' points.');
+  $('claim').onclick=async function(){
+    $('claim').disabled=true;
+    var r=await sb.rpc('claim_reward');
+    if(r.error){
+      var m=r.error.message||'';
+      msg('cmsg',m.indexOf('too early')>-1?'Too early. Wait for the timer.':m.indexOf('daily limit')>-1?'Daily limit reached.':'Something went wrong. Try again.',true);
+    } else msg('cmsg','Added '+CFG.claimPoints+' points.');
+    await refresh();
   };
 
-  $('wd').onclick=function(){
-    var upi=$('upi').value.trim(), amt=parseFloat($('amt').value), bal=S.points/CFG.pointsPerRupee;
-    if(!/^[\w.\-]{2,}@[a-zA-Z]{2,}$/.test(upi)) return msg('wmsg','Enter a valid UPI ID.',true);
+  $('wd').onclick=async function(){
+    var upi=$('upi').value.trim(), amt=parseFloat($('amt').value);
+    if(!/^[A-Za-z0-9._-]{2,}@[A-Za-z]{2,}$/.test(upi)) return msg('wmsg','Enter a valid UPI ID.',true);
     if(!(amt>=CFG.minWithdrawRs)) return msg('wmsg','Minimum withdrawal is ₹'+CFG.minWithdrawRs+'.',true);
-    if(amt>bal) return msg('wmsg','You don’t have enough balance.',true);
-    S.points-=Math.round(amt*CFG.pointsPerRupee);
-    log('Withdraw to '+upi+' (pending)','−₹'+amt.toFixed(2)); save(); show();
-    msg('wmsg','Request sent. We’ll review it within 48 hours.');
+    $('wd').disabled=true;
+    var r=await sb.rpc('request_withdrawal',{p_upi:upi,p_amount:amt});
+    if(r.error){
+      var m=r.error.message||'';
+      msg('wmsg',m.indexOf('low balance')>-1?'You don’t have enough balance.':'Could not send the request. Check the details.',true);
+    } else { msg('wmsg','Request sent. We’ll review it within 48 hours.'); $('amt').value=''; }
+    $('wd').disabled=false;
+    await refresh();
   };
 
-  $('copy').onclick=function(){
-    var link=location.href.split('#')[0]+'?ref='+S.code;
-    try{navigator.clipboard.writeText(link).then(function(){$('copy').textContent='Copied'})}catch(e){$('copy').textContent='Copy not allowed'}
-  };
-
-  show();
+  sb.auth.onAuthStateChange(function(){setTimeout(refresh,0)});
+  refresh();
 })();
 </script>
 </body>
