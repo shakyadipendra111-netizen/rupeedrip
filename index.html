@@ -49,6 +49,7 @@ li span{color:var(--mute);text-align:right}
     <div id="nameRow" hidden><input id="name" placeholder="Your name" autocomplete="name" maxlength="40"></div>
     <input id="email" type="email" placeholder="Email" autocomplete="email" maxlength="80">
     <input id="pw" type="password" placeholder="Password (6+ characters)" autocomplete="current-password" maxlength="72">
+    <div id="hc" style="margin-bottom:10px;min-height:78px"></div>
     <button id="go">Log in</button>
     <div class="msg err" id="lerr"></div>
   </section>
@@ -93,6 +94,14 @@ li span{color:var(--mute);text-align:right}
   var CFG={claimPoints:5,pointsPerRupee:100,minWithdrawRs:50,dailyCap:20};
 
   var sb=window.supabase.createClient(SB_URL,SB_KEY);
+
+  // hCaptcha (public sitekey)
+  var HC_KEY='37c4546e-7ba2-45a6-bfaa-8cc4444a3cca', hcId=null;
+  window.hcReady=function(){
+    try{
+      hcId=hcaptcha.render('hc',{sitekey:HC_KEY,theme:window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'});
+    }catch(e){}
+  };
   var $=function(id){return document.getElementById(id)};
   var P=null, mode='login';
   function rs(p){return '₹'+(p/CFG.pointsPerRupee).toFixed(2)}
@@ -114,14 +123,17 @@ li span{color:var(--mute);text-align:right}
     var email=$('email').value.trim(), pw=$('pw').value, name=$('name').value.trim();
     if(!/^\S+@\S+\.\S+$/.test(email)||pw.length<6) return msg('lerr','Enter a valid email and a password of 6+ characters.',true);
     if(mode==='signup'&&name.length<2) return msg('lerr','Enter your name.',true);
+    var tok=(hcId!==null&&window.hcaptcha)?hcaptcha.getResponse(hcId):'';
+    if(!tok) return msg('lerr','Please complete the captcha first.',true);
     $('go').disabled=true;
     try{
       var r=mode==='signup'
-        ? await sb.auth.signUp({email:email,password:pw,options:{data:{name:name}}})
-        : await sb.auth.signInWithPassword({email:email,password:pw});
+        ? await sb.auth.signUp({email:email,password:pw,options:{data:{name:name},captchaToken:tok}})
+        : await sb.auth.signInWithPassword({email:email,password:pw,options:{captchaToken:tok}});
       if(r.error) msg('lerr',r.error.message,true);
       else if(mode==='signup'&&!r.data.session) msg('lerr','Account created. Check your email to confirm, then log in.');
     }catch(e){msg('lerr','Network problem. Please try again.',true)}
+    try{if(hcId!==null)hcaptcha.reset(hcId)}catch(e){}
     $('go').disabled=false;
   };
   $('out').onclick=async function(){await sb.auth.signOut()};
@@ -190,5 +202,6 @@ li span{color:var(--mute);text-align:right}
   refresh();
 })();
 </script>
+<script src="https://js.hcaptcha.com/1/api.js?render=explicit&onload=hcReady" async defer></script>
 </body>
 </html>
