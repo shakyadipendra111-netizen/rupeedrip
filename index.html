@@ -34,6 +34,7 @@ li{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:
 li span{color:var(--mute);text-align:right}
 .msg{min-height:1.2em;font-size:.88rem;margin:8px 0 0;color:var(--acc);font-weight:600}
 .msg.err{color:#d6336c}
+a{color:var(--acc);font-weight:600}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -83,6 +84,7 @@ li span{color:var(--mute);text-align:right}
       <ul id="hist"></ul>
     </div>
   </main>
+  <p style="text-align:center;font-size:.82rem"><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Use</a></p>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
@@ -148,7 +150,7 @@ li span{color:var(--mute);text-align:right}
     $('hi').textContent='Hi, '+(P.name||'there');
     $('rs').textContent=rs(P.points);
     $('pts').textContent=P.points+' points';
-    $('wInfo').textContent='Minimum withdrawal ₹'+CFG.minWithdrawRs+'. Requests are reviewed manually.';
+    $('wInfo').textContent='Minimum withdrawal ₹'+CFG.minWithdrawRs+'. Requests are reviewed manually and paid within 2–3 days.';
     var w=await sb.from('withdrawals').select('*').order('created_at',{ascending:false}).limit(10);
     var h=$('hist'); h.textContent='';
     var rows=w.data||[];
@@ -193,7 +195,7 @@ li span{color:var(--mute);text-align:right}
     if(r.error){
       var m=r.error.message||'';
       msg('wmsg',m.indexOf('low balance')>-1?'You don’t have enough balance.':'Could not send the request. Check the details.',true);
-    } else { msg('wmsg','Request sent. We’ll review it within 48 hours.'); $('amt').value=''; }
+    } else { msg('wmsg','Request sent. Payouts are made within 2–3 days.'); $('amt').value=''; }
     $('wd').disabled=false;
     await refresh();
   };
