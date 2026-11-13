@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>RupeeDrip – daily rewards</title>
+<title>RupeeDrip – watch videos, earn coins</title>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f1f5fa;--card:#fff;--fg:#14213d;--mute:#5b6784;--acc:#12805c;--acc-fg:#fff;--hi:#ffb703;--line:#dbe2ee;
@@ -19,16 +19,17 @@ h2{font-size:1.05rem;margin:0 0 10px}
 p{margin:0 0 10px;color:var(--mute);font-size:.92rem}
 .bal{font-size:2.6rem;font-weight:800;letter-spacing:-.03em;line-height:1.1}
 .bal small{display:block;font-size:.85rem;font-weight:400;color:var(--mute);letter-spacing:0}
-button,input{font:inherit}
+button,input,select{font:inherit}
 button{width:100%;border:0;border-radius:14px;padding:14px;font-weight:800;background:var(--acc);color:var(--acc-fg);cursor:pointer}
 button:disabled{opacity:.45;cursor:not-allowed}
 button.ghost{background:transparent;color:var(--fg);border:1px solid var(--line);width:auto;padding:8px 14px;font-weight:600}
 .tabs{display:flex;gap:8px;margin-bottom:12px}
 .tabs button{padding:10px;background:transparent;color:var(--fg);border:1px solid var(--line)}
 .tabs button[aria-pressed="true"]{background:var(--acc);color:var(--acc-fg);border-color:var(--acc)}
-input{width:100%;padding:13px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--fg);margin-bottom:10px}
-button:focus-visible,input:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
-.ad{border:2px dashed var(--line);border-radius:14px;min-height:90px;display:grid;place-items:center;color:var(--mute);font-size:.85rem;text-align:center;padding:8px}
+input,select{width:100%;padding:13px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--fg);margin-bottom:10px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
+.video{border:2px dashed var(--line);border-radius:14px;min-height:150px;display:grid;place-items:center;color:var(--mute);font-size:.88rem;text-align:center;padding:10px;margin-bottom:12px}
+.video.on{border-style:solid;border-color:var(--acc);color:var(--fg)}
 ul{list-style:none;margin:0;padding:0}
 li{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:.88rem}
 li span{color:var(--mute);text-align:right}
@@ -58,29 +59,32 @@ a{color:var(--acc);font-weight:600}
   <main id="app" hidden>
     <div class="card">
       <p id="hi"></p>
-      <div class="bal"><span id="rs">₹0.00</span><small id="pts">0 points</small></div>
+      <div class="bal"><span id="rs">₹0.00</span><small id="pts">0 coins</small></div>
     </div>
 
     <div class="card">
-      <h2>Claim reward</h2>
+      <h2>Watch a video, earn coins</h2>
       <p id="claimInfo"></p>
-      <button id="claim">Claim</button>
+      <div class="video" id="vbox">Video ad area – paste your video ad code here</div>
+      <button id="claim">Watch video &amp; earn</button>
       <div class="msg" id="cmsg"></div>
     </div>
 
-    <div class="card"><div class="ad">Ad slot – paste your ad network code here</div></div>
-
     <div class="card">
-      <h2>Withdraw to UPI</h2>
+      <h2>Redeem to UPI or Paytm</h2>
       <p id="wInfo"></p>
-      <input id="upi" placeholder="UPI ID (name@bank)" maxlength="60" autocapitalize="off">
+      <select id="meth" aria-label="Payout method">
+        <option value="upi">UPI ID</option>
+        <option value="paytm">Paytm number</option>
+      </select>
+      <input id="dest" placeholder="UPI ID (name@bank)" maxlength="60" autocapitalize="off">
       <input id="amt" type="number" inputmode="decimal" placeholder="Amount in ₹">
-      <button id="wd">Request withdrawal</button>
+      <button id="wd">Request redeem</button>
       <div class="msg" id="wmsg"></div>
     </div>
 
     <div class="card">
-      <h2>Withdrawals</h2>
+      <h2>Redeem history</h2>
       <ul id="hist"></ul>
     </div>
   </main>
@@ -92,21 +96,18 @@ a{color:var(--acc);font-weight:600}
 (function(){
   var SB_URL='https://aluonwdmxricptjjshmc.supabase.co';
   var SB_KEY='sb_publishable_GdCwJeunuMWhOkr0Ef7joQ_EYRY47i4';
-  // Display only. The real rules are enforced in the database.
-  var CFG={claimPoints:5,pointsPerRupee:100,minWithdrawRs:50,dailyCap:20};
+  // Display only. The real rules are enforced in the database (see the SQL).
+  var CFG={reward:2,coinsPerRupee:100,minWithdrawRs:50,dailyCap:20,watchSec:15};
 
   var sb=window.supabase.createClient(SB_URL,SB_KEY);
-
-  // hCaptcha (public sitekey)
   var HC_KEY='37c4546e-7ba2-45a6-bfaa-8cc4444a3cca', hcId=null;
   window.hcReady=function(){
-    try{
-      hcId=hcaptcha.render('hc',{sitekey:HC_KEY,theme:window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'});
-    }catch(e){}
+    try{hcId=hcaptcha.render('hc',{sitekey:HC_KEY,theme:window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'})}catch(e){}
   };
+
   var $=function(id){return document.getElementById(id)};
-  var P=null, mode='login';
-  function rs(p){return '₹'+(p/CFG.pointsPerRupee).toFixed(2)}
+  var P=null, mode='login', claimMode='watch';
+  function rs(p){return '₹'+(p/CFG.coinsPerRupee).toFixed(2)}
   function msg(id,t,err){var e=$(id);e.textContent=t;e.className='msg'+(err?' err':'')}
 
   function setMode(m){
@@ -149,15 +150,15 @@ a{color:var(--acc);font-weight:600}
     P=r.data;
     $('hi').textContent='Hi, '+(P.name||'there');
     $('rs').textContent=rs(P.points);
-    $('pts').textContent=P.points+' points';
-    $('wInfo').textContent='Minimum withdrawal ₹'+CFG.minWithdrawRs+'. Requests are reviewed manually and paid within 2–3 days.';
+    $('pts').textContent=P.points+' coins ('+CFG.coinsPerRupee+' coins = ₹1)';
+    $('wInfo').textContent='Minimum ₹'+CFG.minWithdrawRs+'. Requests are reviewed manually and paid within 2–3 days.';
     var w=await sb.from('withdrawals').select('*').order('created_at',{ascending:false}).limit(10);
     var h=$('hist'); h.textContent='';
     var rows=w.data||[];
-    if(!rows.length){var li=document.createElement('li');li.textContent='No withdrawals yet.';h.appendChild(li)}
+    if(!rows.length){var li=document.createElement('li');li.textContent='No redeem requests yet.';h.appendChild(li)}
     rows.forEach(function(x){
       var li=document.createElement('li'),a=document.createElement('div'),b=document.createElement('span');
-      a.textContent='₹'+Number(x.amount_rs).toFixed(2)+' to '+x.upi;
+      a.textContent='₹'+Number(x.amount_rs).toFixed(2)+' to '+x.upi+' ('+(x.method||'upi')+')';
       b.textContent=x.status+' · '+new Date(x.created_at).toLocaleDateString();
       li.append(a,b); h.appendChild(li);
     });
@@ -166,35 +167,55 @@ a{color:var(--acc);font-weight:600}
 
   function tick(){
     if(!P) return;
-    var today=new Date().toISOString().slice(0,10);
-    var used=P.claim_day===today?P.claims_today:0, b=$('claim');
-    var left=Math.max(0,new Date(P.next_claim).getTime()-Date.now());
-    $('claimInfo').textContent='+'+CFG.claimPoints+' points ('+rs(CFG.claimPoints)+') per claim. Today: '+used+'/'+CFG.dailyCap+'.';
+    var now=Date.now(), today=new Date().toISOString().slice(0,10);
+    var used=P.claim_day===today?P.claims_today:0, b=$('claim'), v=$('vbox');
+    $('claimInfo').textContent='Watch the full video, then claim +'+CFG.reward+' coins ('+rs(CFG.reward)+'). Today: '+used+'/'+CFG.dailyCap+'.';
+    var left=Math.max(0,new Date(P.next_claim).getTime()-now);
+    var vs=P.view_started?new Date(P.view_started).getTime():0;
+    var watching=vs&&(now-vs)<15*60000;
+    v.className='video'+(watching?' on':'');
+    v.textContent=watching?'Video ad playing… (your video ad code goes here)':'Video ad area – paste your video ad code here';
     if(used>=CFG.dailyCap){b.disabled=true;b.textContent='Daily limit reached';return}
-    if(left>0){var m=Math.floor(left/60000),s=Math.floor(left%60000/1000);b.disabled=true;b.textContent='Next claim in '+m+':'+String(s).padStart(2,'0')}
-    else{b.disabled=false;b.textContent='Claim '+CFG.claimPoints+' points'}
+    if(left>0){var m=Math.floor(left/60000),s=Math.floor(left%60000/1000);b.disabled=true;b.textContent='Next video in '+m+':'+String(s).padStart(2,'0');return}
+    if(watching){
+      var rem=Math.ceil((vs+CFG.watchSec*1000-now)/1000);
+      if(rem>0){b.disabled=true;b.textContent='Watching… '+rem+'s';return}
+      claimMode='claim';b.disabled=false;b.textContent='Claim '+CFG.reward+' coins';return;
+    }
+    claimMode='watch';b.disabled=false;b.textContent='Watch video & earn';
   }
   setInterval(tick,1000);
 
   $('claim').onclick=async function(){
     $('claim').disabled=true;
-    var r=await sb.rpc('claim_reward');
-    if(r.error){
-      var m=r.error.message||'';
-      msg('cmsg',m.indexOf('too early')>-1?'Too early. Wait for the timer.':m.indexOf('daily limit')>-1?'Daily limit reached.':'Something went wrong. Try again.',true);
-    } else msg('cmsg','Added '+CFG.claimPoints+' points.');
+    if(claimMode==='watch'){
+      var a=await sb.rpc('start_view');
+      if(a.error) msg('cmsg','Could not start. Try again.',true); else msg('cmsg','');
+    } else {
+      var r=await sb.rpc('claim_reward');
+      if(r.error){
+        var m=r.error.message||'';
+        msg('cmsg',m.indexOf('watch first')>-1?'Please watch the full video first.':m.indexOf('too early')>-1?'Too early. Wait for the timer.':m.indexOf('daily limit')>-1?'Daily limit reached.':'Something went wrong. Try again.',true);
+      } else msg('cmsg','Added '+CFG.reward+' coins.');
+    }
     await refresh();
   };
 
+  $('meth').onchange=function(){
+    $('dest').placeholder=$('meth').value==='paytm'?'Paytm mobile number (10 digits)':'UPI ID (name@bank)';
+    $('dest').inputMode=$('meth').value==='paytm'?'numeric':'text';
+  };
+
   $('wd').onclick=async function(){
-    var upi=$('upi').value.trim(), amt=parseFloat($('amt').value);
-    if(!/^[A-Za-z0-9._-]{2,}@[A-Za-z]{2,}$/.test(upi)) return msg('wmsg','Enter a valid UPI ID.',true);
-    if(!(amt>=CFG.minWithdrawRs)) return msg('wmsg','Minimum withdrawal is ₹'+CFG.minWithdrawRs+'.',true);
+    var m=$('meth').value, d=$('dest').value.trim(), amt=parseFloat($('amt').value);
+    if(m==='upi'&&!/^[A-Za-z0-9._-]{2,}@[A-Za-z]{2,}$/.test(d)) return msg('wmsg','Enter a valid UPI ID.',true);
+    if(m==='paytm'&&!/^[6-9][0-9]{9}$/.test(d)) return msg('wmsg','Enter a valid 10-digit Paytm number.',true);
+    if(!(amt>=CFG.minWithdrawRs)) return msg('wmsg','Minimum is ₹'+CFG.minWithdrawRs+'.',true);
     $('wd').disabled=true;
-    var r=await sb.rpc('request_withdrawal',{p_upi:upi,p_amount:amt});
+    var r=await sb.rpc('request_withdrawal',{p_method:m,p_dest:d,p_amount:amt});
     if(r.error){
-      var m=r.error.message||'';
-      msg('wmsg',m.indexOf('low balance')>-1?'You don’t have enough balance.':'Could not send the request. Check the details.',true);
+      var t=r.error.message||'';
+      msg('wmsg',t.indexOf('low balance')>-1?'You don’t have enough coins.':'Could not send the request. Check the details.',true);
     } else { msg('wmsg','Request sent. Payouts are made within 2–3 days.'); $('amt').value=''; }
     $('wd').disabled=false;
     await refresh();
