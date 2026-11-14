@@ -4,62 +4,138 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>RupeeDrip – watch videos, earn coins</title>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f1f5fa;--card:#fff;--fg:#14213d;--mute:#5b6784;--acc:#12805c;--acc-fg:#fff;--hi:#ffb703;--line:#dbe2ee;
+:root{--bg:#070514;--card:rgba(15,13,35,.78);--fg:#fff;--mute:#94a3b8;--acc:#10D876;--acc-fg:#fff;--hi:#16D9E3;--line:rgba(255,255,255,.12);
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root{--bg:#0e1522;--card:#17213a;--fg:#eaf0ff;--mute:#9aa8c7;--acc:#2fc08b;--acc-fg:#07281d;--line:#2a3757}}
 *,*::before,*::after{box-sizing:inherit}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:Sora,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5}
-.wrap{max-width:30rem;margin:0 auto;padding:16px}
-header{display:flex;justify-content:space-between;align-items:center;padding:8px 0 16px}
-header b{font-size:1.3rem;font-weight:800;letter-spacing:-.02em}
-.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:14px}
-h2{font-size:1.05rem;margin:0 0 10px}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:'Plus Jakarta Sans',Sora,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5}
+.wrap{position:relative;z-index:1;max-width:30rem;margin:0 auto;padding:16px}
+header{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0 14px}
+.brand{font-size:1.25rem;font-weight:800;letter-spacing:-.02em;background:linear-gradient(90deg,#E935C1,#8B2CF5,#16D9E3);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.wallet{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-weight:800;font-size:.86rem;white-space:nowrap}
+.wallet i{width:1px;height:16px;background:var(--line)}
+.wallet .c{color:#FFC94D}.wallet .r{color:#10D876}
+.dot{display:inline-block;width:11px;height:11px;border-radius:50%;background:linear-gradient(145deg,#FFC94D,#F59E0B);margin-right:5px}
+.card{background:var(--card);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border:1px solid var(--line);border-radius:24px;padding:18px;margin-bottom:14px;box-shadow:0 16px 40px rgba(0,0,0,.45),inset 0 1px 1px rgba(255,255,255,.1)}
+.balcard{background:linear-gradient(135deg,rgba(139,44,245,.42),rgba(22,217,227,.16));border-color:rgba(139,44,245,.6);box-shadow:0 0 32px rgba(139,44,245,.3),inset 0 1px 1px rgba(255,255,255,.2)}
+h2{font-size:1.05rem;margin:0 0 10px;font-weight:800}
 p{margin:0 0 10px;color:var(--mute);font-size:.92rem}
-.bal{font-size:2.6rem;font-weight:800;letter-spacing:-.03em;line-height:1.1}
-.bal small{display:block;font-size:.85rem;font-weight:400;color:var(--mute);letter-spacing:0}
+.bal{font-size:2.7rem;font-weight:800;letter-spacing:-.03em;line-height:1.1}
+.bal small{display:block;font-size:.85rem;font-weight:500;color:#cbd5e1;letter-spacing:0}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:14px;box-shadow:0 10px 26px rgba(0,0,0,.35)}
+.stat small{display:block;color:var(--mute);font-size:.74rem;font-weight:600;margin-bottom:2px}
+.stat b{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;background:linear-gradient(90deg,#16D9E3,#10D876);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 button,input,select{font:inherit}
-button{width:100%;border:0;border-radius:14px;padding:14px;font-weight:800;background:var(--acc);color:var(--acc-fg);cursor:pointer}
-button:disabled{opacity:.45;cursor:not-allowed}
-button.ghost{background:transparent;color:var(--fg);border:1px solid var(--line);width:auto;padding:8px 14px;font-weight:600}
-.tabs{display:flex;gap:8px;margin-bottom:12px}
-.tabs button{padding:10px;background:transparent;color:var(--fg);border:1px solid var(--line)}
-.tabs button[aria-pressed="true"]{background:var(--acc);color:var(--acc-fg);border-color:var(--acc)}
-input,select{width:100%;padding:13px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--fg);margin-bottom:10px}
-button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
-.video{border:2px dashed var(--line);border-radius:14px;min-height:150px;display:grid;place-items:center;color:var(--mute);font-size:.88rem;text-align:center;padding:10px;margin-bottom:12px}
-.video.on{border-style:solid;border-color:var(--acc);color:var(--fg)}
+button{width:100%;border:0;border-radius:999px;padding:14px 18px;font-weight:800;background:linear-gradient(90deg,#6E2CF5 0%,#3E7BFA 48%,#10D876 100%);color:#fff;cursor:pointer;box-shadow:0 5px 0 #1B124A,0 10px 24px rgba(16,216,118,.25),inset 0 1px 1px rgba(255,255,255,.4);transition:transform .12s,box-shadow .12s,filter .2s}
+button:hover:not(:disabled){filter:brightness(1.08)}
+button:active:not(:disabled){transform:translateY(3px);box-shadow:0 2px 0 #1B124A,0 5px 14px rgba(16,216,118,.25)}
+button:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
+button.ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid var(--line);width:auto;padding:7px 12px;font-size:.8rem;font-weight:700;box-shadow:none}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);background:rgba(255,255,255,.05);border-radius:16px;padding:4px;border:1px solid rgba(255,255,255,.08);margin-bottom:14px}
+.tabs button{background:transparent;color:#94a3b8;border:0;border-radius:12px;padding:10px;font-size:13px;box-shadow:none}
+.tabs button:active:not(:disabled){transform:none;box-shadow:none}
+.tabs button[aria-pressed="true"]{background:linear-gradient(90deg,rgba(139,44,245,.45),rgba(16,216,118,.35));color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+input,select{width:100%;padding:13px 16px;border-radius:16px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;margin-bottom:12px}
+input::placeholder{color:#64748B}
+select option{background:#15122e;color:#fff}
+input:focus,select:focus{border-color:#16D9E3;background:rgba(22,217,227,.06);box-shadow:0 0 0 3px rgba(22,217,227,.18);outline:0}
+button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
+.video{border:2px dashed rgba(255,255,255,.2);border-radius:18px;min-height:150px;display:grid;place-items:center;color:var(--mute);font-size:.88rem;text-align:center;padding:10px;margin-bottom:12px;background:rgba(255,255,255,.03)}
+.video.on{border-style:solid;border-color:#10D876;color:#fff;box-shadow:0 0 22px rgba(16,216,118,.25)}
 ul{list-style:none;margin:0;padding:0}
-li{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:.88rem}
+li{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line);font-size:.88rem}
 li span{color:var(--mute);text-align:right}
-.msg{min-height:1.2em;font-size:.88rem;margin:8px 0 0;color:var(--acc);font-weight:600}
-.msg.err{color:#d6336c}
-a{color:var(--acc);font-weight:600}
+.msg{min-height:1.2em;font-size:.88rem;margin:8px 0 0;color:#10D876;font-weight:600}
+.msg.err{color:#ff7ab0}
+a{color:#16D9E3;font-weight:600}
+.btn{display:block;text-align:center;text-decoration:none;border-radius:999px;padding:14px;font-weight:800;background:linear-gradient(90deg,#6E2CF5 0%,#3E7BFA 48%,#10D876 100%);color:#fff;box-shadow:0 5px 0 #1B124A,0 10px 24px rgba(16,216,118,.25)}
+.code{font-size:1.7rem;font-weight:800;letter-spacing:.08em;margin:2px 0 10px;background:linear-gradient(90deg,#E935C1,#8B2CF5,#16D9E3);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;width:fit-content}
+.glow{position:fixed;border-radius:50%;filter:blur(110px);z-index:0;pointer-events:none}
+.g1{width:420px;height:420px;background:radial-gradient(circle,rgba(139,44,245,.45),transparent 70%);top:-120px;left:-100px}
+.g2{width:460px;height:460px;background:radial-gradient(circle,rgba(16,216,118,.35),transparent 70%);bottom:-140px;right:-100px}
+.g3{width:340px;height:340px;background:radial-gradient(circle,rgba(22,217,227,.22),transparent 70%);top:40%;left:50%;transform:translate(-50%,-50%)}
+body.neon{background:#070514;color:#fff}
+body.neon header{display:none}
+body.neon .wrap{position:relative;z-index:1;min-height:100svh;display:flex;flex-direction:column;justify-content:center}
+.foot{text-align:center;font-size:.82rem}
+.foot{color:#94a3b8;margin-top:16px}
+body.neon .foot{display:none}
+#login{font-family:'Plus Jakarta Sans',Sora,system-ui,sans-serif}
+body.neon #login{background:rgba(15,13,35,.78);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);border:1px solid rgba(255,255,255,.12);border-radius:32px;padding:30px 20px 24px;box-shadow:0 25px 60px rgba(0,0,0,.75),inset 0 1px 1px rgba(255,255,255,.15);color:#fff}
+.n-brand{text-align:center;font-size:20px;font-weight:800;letter-spacing:-.5px;margin-bottom:12px}
+.n-brand span,.n-title span{-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.n-brand span{background-image:linear-gradient(90deg,#E935C1,#8B2CF5,#16D9E3)}
+.n-title{text-align:center;font-size:26px;font-weight:800;line-height:1.25;margin:0 0 18px}
+.n-title span{background-image:linear-gradient(90deg,#16D9E3,#10D876)}
+.n-stage{position:relative;display:flex;justify-content:center;align-items:center;margin:6px 0 22px}
+.n-emblem{width:84px;height:84px;border-radius:26px;background:linear-gradient(135deg,rgba(139,44,245,.35),rgba(22,217,227,.2));border:1.5px solid rgba(139,44,245,.7);box-shadow:0 0 32px rgba(139,44,245,.55),0 0 18px rgba(22,217,227,.35),inset 0 2px 6px rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-size:2.4rem;font-weight:800;color:#fff;animation:flt 3.5s ease-in-out infinite}
+@keyframes flt{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.n-coin{position:absolute;width:28px;height:28px;border-radius:50%;background:linear-gradient(145deg,#16D9E3,#6E3AFF);border:1.5px solid rgba(255,255,255,.45);box-shadow:0 4px 14px rgba(22,217,227,.5);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff}
+.n-c1{left:calc(50% - 66px);bottom:0}
+.n-c2{right:calc(50% - 66px);top:2px;background:linear-gradient(145deg,#E935C1,#8B2CF5)}
+#login .tabs{display:grid;grid-template-columns:1fr 1fr;gap:0;background:rgba(255,255,255,.05);border-radius:16px;padding:4px;border:1px solid rgba(255,255,255,.08);margin-bottom:18px}
+#login .tabs button{background:transparent;color:#94a3b8;border:0;border-radius:12px;padding:10px;font-size:13px;font-weight:700}
+#login .tabs button[aria-pressed="true"]{background:linear-gradient(90deg,rgba(139,44,245,.45),rgba(16,216,118,.35));color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.3);border:0}
+#login label{display:block;font-size:12px;font-weight:600;color:#CBD5E1;margin:0 0 6px 4px}
+#login input{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:13px 16px;color:#fff;font-size:14px;margin-bottom:14px}
+#login input::placeholder{color:#64748B}
+#login input:focus{border-color:#16D9E3;background:rgba(22,217,227,.06);box-shadow:0 0 0 3px rgba(22,217,227,.18);outline:0}
+#login #hc{display:flex;justify-content:center}
+#login #go{width:100%;padding:15px 20px;border-radius:999px;background:linear-gradient(90deg,#6E2CF5 0%,#3E7BFA 48%,#10D876 100%);color:#fff;font-size:15px;font-weight:800;letter-spacing:.3px;box-shadow:0 6px 0 #1B124A,0 12px 28px rgba(16,216,118,.35),inset 0 1px 1px rgba(255,255,255,.45);transition:transform .12s,box-shadow .12s,filter .2s;margin-top:4px}
+#login #go:hover:not(:disabled){filter:brightness(1.08)}
+#login #go:active:not(:disabled){transform:translateY(4px);box-shadow:0 2px 0 #1B124A,0 6px 16px rgba(16,216,118,.3)}
+#login .msg{color:#10D876;text-align:center}
+#login .msg.err{color:#ff7ab0}
+.n-consent,.n-switch{text-align:center;color:#94a3b8;margin:12px 0 0}
+.n-consent{font-size:11.5px}
+.n-switch{font-size:13px;margin-top:16px}
+.n-link{width:auto;display:inline;background:none;border:0;padding:0;color:#E935C1;font:inherit;font-weight:700;cursor:pointer;text-decoration:underline}
 [hidden]{display:none!important}
 </style>
 </head>
-<body>
+<body class="neon">
+<div class="glow g1"></div><div class="glow g2"></div><div class="glow g3"></div>
 <div class="wrap">
-  <header><b>RupeeDrip</b><button class="ghost" id="out" hidden>Log out</button></header>
+  <header><span class="brand">RupeeDrip</span><div class="wallet" aria-label="Wallet"><span class="c"><span class="dot"></span><span id="hCoins">0</span></span><i></i><span class="r">₹<span id="hRs">0.00</span></span></div><button class="ghost" id="out" hidden>Log out</button></header>
 
   <section id="login" class="card">
+    <div class="n-brand"><span>RupeeDrip</span></div>
+    <h1 class="n-title" id="nTitle">Start Earning <br><span>Coins &amp; Rewards</span></h1>
+    <div class="n-stage"><div class="n-coin n-c1">₹</div><div class="n-emblem">₹</div><div class="n-coin n-c2">★</div></div>
     <div class="tabs">
-      <button id="tLogin" aria-pressed="true">Log in</button>
-      <button id="tSign" aria-pressed="false">Sign up</button>
+      <button id="tLogin" aria-pressed="true">Sign In</button>
+      <button id="tSign" aria-pressed="false">Sign Up</button>
     </div>
-    <div id="nameRow" hidden><input id="name" placeholder="Your name" autocomplete="name" maxlength="40"></div>
-    <input id="email" type="email" placeholder="Email" autocomplete="email" maxlength="80">
-    <input id="pw" type="password" placeholder="Password (6+ characters)" autocomplete="current-password" maxlength="72">
+    <div id="nameRow" hidden><label for="name">Name</label><input id="name" placeholder="Enter your name" autocomplete="name" maxlength="40"></div>
+    <label for="email">Email Address</label>
+    <input id="email" type="email" placeholder="you@example.com" autocomplete="email" maxlength="80">
+    <label for="pw">Password</label>
+    <input id="pw" type="password" placeholder="6+ characters" autocomplete="current-password" maxlength="72">
+    <div id="refRow" hidden><label for="refc">Referral Code (optional)</label><input id="refc" placeholder="e.g. A1B2C3D" maxlength="12" autocapitalize="characters"></div>
     <div id="hc" style="margin-bottom:10px;min-height:78px"></div>
-    <button id="go">Log in</button>
+    <button id="go">Sign In</button>
     <div class="msg err" id="lerr"></div>
+    <p class="n-consent">By continuing you agree to our <a href="terms.html">Terms</a> and <a href="privacy.html">Privacy Policy</a>.</p>
+    <p class="n-switch" id="swText">Don’t have an account? <button type="button" class="n-link" id="swMode">Sign up</button></p>
   </section>
 
   <main id="app" hidden>
-    <div class="card">
-      <p id="hi"></p>
+    <div class="tabs">
+      <button id="tEarn" aria-pressed="true">Home</button>
+      <button id="tBoard" aria-pressed="false">Leaderboard</button>
+      <button id="tInvite" aria-pressed="false">Invite</button>
+    </div>
+    <div id="pEarn">
+    <div class="card balcard">
+      <p id="hi" style="color:#e2e8f0"></p>
       <div class="bal"><span id="rs">₹0.00</span><small id="pts">0 coins</small></div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><small>Today’s videos</small><b id="stToday">0/20</b></div>
+      <div class="stat"><small>Friends joined</small><b id="stFriends">0</b></div>
     </div>
 
     <div class="card">
@@ -87,8 +163,31 @@ a{color:var(--acc);font-weight:600}
       <h2>Redeem history</h2>
       <ul id="hist"></ul>
     </div>
+    </div>
+
+    <div id="pBoard" hidden>
+      <div class="card">
+        <h2>Top earners</h2>
+        <p id="myRank"></p>
+        <ul id="boardList"></ul>
+        <p style="margin-top:10px">Ranked by coins earned from videos. Only your first name is shown.</p>
+      </div>
+    </div>
+
+    <div id="pInvite" hidden>
+      <div class="card">
+        <h2>Invite friends, earn coins</h2>
+        <p id="refInfo"></p>
+        <div class="code" id="refCode"></div>
+        <input id="refLink" readonly aria-label="Your invite link">
+        <button id="copy">Copy invite link</button>
+        <div style="height:10px"></div>
+        <a class="btn" id="wa" target="_blank" rel="noopener">Share on WhatsApp</a>
+        <p id="refStats" style="margin-top:12px"></p>
+      </div>
+    </div>
   </main>
-  <p style="text-align:center;font-size:.82rem"><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Use</a></p>
+  <p class="foot"><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Use</a></p>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
@@ -97,12 +196,13 @@ a{color:var(--acc);font-weight:600}
   var SB_URL='https://aluonwdmxricptjjshmc.supabase.co';
   var SB_KEY='sb_publishable_GdCwJeunuMWhOkr0Ef7joQ_EYRY47i4';
   // Display only. The real rules are enforced in the database (see the SQL).
-  var CFG={reward:2,coinsPerRupee:100,minWithdrawRs:50,dailyCap:20,watchSec:15};
+  var CFG={reward:2,coinsPerRupee:100,minWithdrawRs:50,dailyCap:20,watchSec:15,refBonus:20,refAfter:5};
+  var REF=(new URLSearchParams(location.search).get('ref')||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,12);
 
   var sb=window.supabase.createClient(SB_URL,SB_KEY);
   var HC_KEY='37c4546e-7ba2-45a6-bfaa-8cc4444a3cca', hcId=null;
   window.hcReady=function(){
-    try{hcId=hcaptcha.render('hc',{sitekey:HC_KEY,theme:window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'})}catch(e){}
+    try{hcId=hcaptcha.render('hc',{sitekey:HC_KEY,theme:'dark',size:window.innerWidth<400?'compact':'normal'})}catch(e){}
   };
 
   var $=function(id){return document.getElementById(id)};
@@ -113,7 +213,11 @@ a{color:var(--acc);font-weight:600}
   function setMode(m){
     mode=m;
     $('nameRow').hidden=m!=='signup';
-    $('go').textContent=m==='signup'?'Create account':'Log in';
+    $('refRow').hidden=m!=='signup'; if(m==='signup'&&REF&&!$('refc').value) $('refc').value=REF;
+    $('go').textContent=m==='signup'?'Create Account':'Sign In';
+    $('nTitle').innerHTML=m==='signup'?'Create Account <br><span>&amp; Start Earning</span>':'Start Earning <br><span>Coins &amp; Rewards</span>';
+    $('swText').firstChild.nodeValue=m==='signup'?'Already have an account? ':'Don’t have an account? ';
+    $('swMode').textContent=m==='signup'?'Sign in':'Sign up';
     $('tLogin').setAttribute('aria-pressed',m==='login');
     $('tSign').setAttribute('aria-pressed',m==='signup');
     $('pw').autocomplete=m==='signup'?'new-password':'current-password';
@@ -121,6 +225,7 @@ a{color:var(--acc);font-weight:600}
   }
   $('tLogin').onclick=function(){setMode('login')};
   $('tSign').onclick=function(){setMode('signup')};
+  $('swMode').onclick=function(){setMode(mode==='login'?'signup':'login')};
 
   $('go').onclick=async function(){
     var email=$('email').value.trim(), pw=$('pw').value, name=$('name').value.trim();
@@ -131,7 +236,7 @@ a{color:var(--acc);font-weight:600}
     $('go').disabled=true;
     try{
       var r=mode==='signup'
-        ? await sb.auth.signUp({email:email,password:pw,options:{data:{name:name},captchaToken:tok}})
+        ? await sb.auth.signUp({email:email,password:pw,options:{data:{name:name,ref:$('refc').value.trim().toUpperCase()},captchaToken:tok}})
         : await sb.auth.signInWithPassword({email:email,password:pw,options:{captchaToken:tok}});
       if(r.error) msg('lerr',r.error.message,true);
       else if(mode==='signup'&&!r.data.session) msg('lerr','Account created. Check your email to confirm, then log in.');
@@ -143,14 +248,20 @@ a{color:var(--acc);font-weight:600}
 
   async function refresh(){
     var s=(await sb.auth.getSession()).data.session, on=!!s;
-    $('login').hidden=on; $('app').hidden=!on; $('out').hidden=!on;
+    $('login').hidden=on; $('app').hidden=!on; $('out').hidden=!on; document.body.classList.toggle('neon',!on);
     if(!on){P=null;return}
     var r=await sb.from('profiles').select('*').eq('id',s.user.id).single();
     if(r.error||!r.data){msg('cmsg','Could not load your account. Refresh the page.',true);return}
     P=r.data;
+    $('hCoins').textContent=P.points; $('hRs').textContent=(P.points/CFG.coinsPerRupee).toFixed(2); $('stFriends').textContent=P.ref_count||0;
     $('hi').textContent='Hi, '+(P.name||'there');
     $('rs').textContent=rs(P.points);
     $('pts').textContent=P.points+' coins ('+CFG.coinsPerRupee+' coins = ₹1)';
+    var code=P.ref_code||'', link=location.origin+location.pathname+'?ref='+code;
+    $('refCode').textContent=code; $('refLink').value=link;
+    $('refInfo').textContent='Share your code. When a friend joins and completes '+CFG.refAfter+' video claims, you get '+CFG.refBonus+' coins ('+rs(CFG.refBonus)+').';
+    $('refStats').textContent='Friends joined: '+(P.ref_count||0)+' · Referral earnings: '+(P.ref_earned||0)+' coins ('+rs(P.ref_earned||0)+')';
+    $('wa').href='https://wa.me/?text='+encodeURIComponent('Watch videos and earn coins on RupeeDrip. Join with my code '+code+': '+link);
     $('wInfo').textContent='Minimum ₹'+CFG.minWithdrawRs+'. Requests are reviewed manually and paid within 2–3 days.';
     var w=await sb.from('withdrawals').select('*').order('created_at',{ascending:false}).limit(10);
     var h=$('hist'); h.textContent='';
@@ -169,6 +280,7 @@ a{color:var(--acc);font-weight:600}
     if(!P) return;
     var now=Date.now(), today=new Date().toISOString().slice(0,10);
     var used=P.claim_day===today?P.claims_today:0, b=$('claim'), v=$('vbox');
+    $('stToday').textContent=used+'/'+CFG.dailyCap;
     $('claimInfo').textContent='Watch the full video, then claim +'+CFG.reward+' coins ('+rs(CFG.reward)+'). Today: '+used+'/'+CFG.dailyCap+'.';
     var left=Math.max(0,new Date(P.next_claim).getTime()-now);
     var vs=P.view_started?new Date(P.view_started).getTime():0;
@@ -219,6 +331,34 @@ a{color:var(--acc);font-weight:600}
     } else { msg('wmsg','Request sent. Payouts are made within 2–3 days.'); $('amt').value=''; }
     $('wd').disabled=false;
     await refresh();
+  };
+
+
+  function renderBoard(ul,rows){
+    ul.textContent='';
+    if(!rows.length){var li=document.createElement('li');li.textContent='No one on the board yet. Be the first!';ul.appendChild(li);return}
+    rows.forEach(function(x){
+      var li=document.createElement('li'),a=document.createElement('div'),b=document.createElement('span');
+      a.textContent='#'+x.pos+'  '+x.display_name; b.textContent=x.coins+' coins';
+      li.append(a,b); ul.appendChild(li);
+    });
+  }
+  async function loadBoard(){
+    var r=await sb.rpc('get_leaderboard'), rows=r.data||[];
+    renderBoard($('boardList'),rows);
+    if(P){
+      var m=await sb.rpc('my_rank');
+      $('myRank').textContent=(!m.error&&m.data)?'Your rank: #'+m.data+' · '+(P.total_earned||0)+' coins from videos':'';
+    }
+  }
+  function showTab(t){
+    ['Earn','Board','Invite'].forEach(function(n){$('p'+n).hidden=(n!==t);$('t'+n).setAttribute('aria-pressed',n===t)});
+    if(t==='Board') loadBoard();
+  }
+  ['Earn','Board','Invite'].forEach(function(n){$('t'+n).onclick=function(){showTab(n)}});
+  $('copy').onclick=async function(){
+    try{await navigator.clipboard.writeText($('refLink').value);$('copy').textContent='Copied'}
+    catch(e){$('refLink').select();$('copy').textContent='Select and copy the link'}
   };
 
   sb.auth.onAuthStateChange(function(){setTimeout(refresh,0)});
