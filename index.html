@@ -33,8 +33,8 @@ button:hover:not(:disabled){filter:brightness(1.08)}
 button:active:not(:disabled){transform:translateY(3px);box-shadow:0 2px 0 #1B124A,0 5px 14px rgba(16,216,118,.25)}
 button:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
 button.ghost{background:rgba(255,255,255,.06);color:#fff;border:1px solid var(--line);width:auto;padding:7px 12px;font-size:.8rem;font-weight:700;box-shadow:none}
-.tabs{display:grid;grid-template-columns:repeat(3,1fr);background:rgba(255,255,255,.05);border-radius:16px;padding:4px;border:1px solid rgba(255,255,255,.08);margin-bottom:14px}
-.tabs button{background:transparent;color:#94a3b8;border:0;border-radius:12px;padding:10px;font-size:13px;box-shadow:none}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);background:rgba(255,255,255,.05);border-radius:16px;padding:4px;border:1px solid rgba(255,255,255,.08);margin-bottom:14px}
+.tabs button{background:transparent;color:#94a3b8;border:0;border-radius:12px;padding:10px 4px;font-size:12.5px;box-shadow:none}
 .tabs button:active:not(:disabled){transform:none;box-shadow:none}
 .tabs button[aria-pressed="true"]{background:linear-gradient(90deg,rgba(139,44,245,.45),rgba(16,216,118,.35));color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.3)}
 input,select{width:100%;padding:13px 16px;border-radius:16px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#fff;margin-bottom:12px}
@@ -92,6 +92,10 @@ body.neon #login{background:rgba(15,13,35,.78);-webkit-backdrop-filter:blur(22px
 .n-consent{font-size:11.5px}
 .n-switch{font-size:13px;margin-top:16px}
 .n-link{width:auto;display:inline;background:none;border:0;padding:0;color:#E935C1;font:inherit;font-weight:700;cursor:pointer;text-decoration:underline}
+.wheel{width:96px;height:96px;border-radius:50%;margin:6px auto 16px;display:grid;place-items:center;font-size:2rem;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.6);background:conic-gradient(#6E2CF5,#3E7BFA,#16D9E3,#10D876,#FFC94D,#E935C1,#6E2CF5);box-shadow:0 0 30px rgba(139,44,245,.5);border:4px solid rgba(255,255,255,.25)}
+.wheel.spin{animation:rot 1s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.wheel.spin{animation:none}}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -124,7 +128,8 @@ body.neon #login{background:rgba(15,13,35,.78);-webkit-backdrop-filter:blur(22px
   <main id="app" hidden>
     <div class="tabs">
       <button id="tEarn" aria-pressed="true">Home</button>
-      <button id="tBoard" aria-pressed="false">Leaderboard</button>
+      <button id="tBattle" aria-pressed="false">Battle</button>
+      <button id="tBoard" aria-pressed="false">Ranks</button>
       <button id="tInvite" aria-pressed="false">Invite</button>
     </div>
     <div id="pEarn">
@@ -165,6 +170,18 @@ body.neon #login{background:rgba(15,13,35,.78);-webkit-backdrop-filter:blur(22px
     </div>
     </div>
 
+    <div id="pBattle" hidden>
+      <div class="card">
+        <h2>Spin Battle</h2>
+        <p id="bRules"></p>
+        <div class="wheel" id="wheel">₹</div>
+        <div class="video" id="bvid" hidden>Video ad area – paste your video ad code here</div>
+        <button id="bgo">Watch video to join</button>
+        <div class="msg" id="bmsg"></div>
+        <p id="bInfo" style="margin-top:10px"></p>
+      </div>
+    </div>
+
     <div id="pBoard" hidden>
       <div class="card">
         <h2>Top earners</h2>
@@ -196,7 +213,7 @@ body.neon #login{background:rgba(15,13,35,.78);-webkit-backdrop-filter:blur(22px
   var SB_URL='https://aluonwdmxricptjjshmc.supabase.co';
   var SB_KEY='sb_publishable_GdCwJeunuMWhOkr0Ef7joQ_EYRY47i4';
   // Display only. The real rules are enforced in the database (see the SQL).
-  var CFG={reward:20,coinsPerRupee:1000,minWithdrawRs:50,dailyCap:20,watchSec:15,refBonus:200,refAfter:5};
+  var CFG={reward:20,coinsPerRupee:1000,minWithdrawRs:50,dailyCap:20,watchSec:15,refBonus:200,refAfter:5,battleCap:10,battleWin:30,battleLose:10};
   var REF=(new URLSearchParams(location.search).get('ref')||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,12);
 
   var sb=window.supabase.createClient(SB_URL,SB_KEY);
@@ -352,13 +369,68 @@ body.neon #login{background:rgba(15,13,35,.78);-webkit-backdrop-filter:blur(22px
     }
   }
   function showTab(t){
-    ['Earn','Board','Invite'].forEach(function(n){$('p'+n).hidden=(n!==t);$('t'+n).setAttribute('aria-pressed',n===t)});
+    ['Earn','Battle','Board','Invite'].forEach(function(n){$('p'+n).hidden=(n!==t);$('t'+n).setAttribute('aria-pressed',n===t)});
     if(t==='Board') loadBoard();
   }
-  ['Earn','Board','Invite'].forEach(function(n){$('t'+n).onclick=function(){showTab(n)}});
+  ['Earn','Battle','Board','Invite'].forEach(function(n){$('t'+n).onclick=function(){showTab(n)}});
   $('copy').onclick=async function(){
     try{await navigator.clipboard.writeText($('refLink').value);$('copy').textContent='Copied'}
     catch(e){$('refLink').select();$('copy').textContent='Select and copy the link'}
+  };
+
+
+  // ----- Spin Battle: free to join by watching a video; prizes are paid by the platform -----
+  var bState='idle', bEnd=0, bId=null, bTimer=null;
+  $('bRules').textContent='Watch a short video to join. You are matched with a real player and the wheel picks a winner. The winner gets '+CFG.battleWin+' coins and the other player gets '+CFG.battleLose+' coins. You never lose coins.';
+  function bRender(){
+    var b=$('bgo');
+    var used=(P&&P.battle_day===new Date().toISOString().slice(0,10))?(P.battles_today||0):0;
+    $('bInfo').textContent='Battles today: '+used+'/'+CFG.battleCap;
+    $('bvid').hidden=!(bState==='watching'||bState==='ready');
+    $('wheel').classList.toggle('spin',bState==='waiting');
+    if(bState==='waiting'){b.disabled=true;b.textContent='Finding an opponent…';return}
+    if(bState==='watching'){
+      var r=Math.ceil((bEnd-Date.now())/1000);
+      if(r>0){b.disabled=true;b.textContent='Watching… '+r+'s';return}
+      bState='ready';
+    }
+    if(bState==='ready'){b.disabled=false;b.textContent='Join battle';return}
+    if(used>=CFG.battleCap){b.disabled=true;b.textContent='Daily battle limit reached';return}
+    b.disabled=false;b.textContent=bState==='result'?'Play again':'Watch video to join ('+CFG.watchSec+'s)';
+  }
+  setInterval(function(){if(P)bRender()},1000);
+  async function bShow(d){
+    clearTimeout(bTimer); bState='result';
+    var t=d.status==='expired'?'No opponent joined in time. You still got '+d.coins+' coins.'
+      :(d.won?'You won! +'+d.coins+' coins.':'Your opponent won this time. You still got '+d.coins+' coins.');
+    msg('bmsg',t);
+    await refresh(); bRender();
+  }
+  function bPoll(n){
+    clearTimeout(bTimer);
+    bTimer=setTimeout(async function(){
+      var r=await sb.rpc('battle_status'), d=r.data;
+      if(d&&d.id===bId&&d.status!=='waiting'){bShow(d);return}
+      if(n<40) bPoll(n+1); else {bState='idle';msg('bmsg','Still waiting. Check your balance in a minute.',true);bRender()}
+    },3000);
+  }
+  $('bgo').onclick=async function(){
+    var b=$('bgo'); b.disabled=true; msg('bmsg','');
+    if(bState==='idle'||bState==='result'){
+      var s1=await sb.rpc('start_battle_view');
+      if(s1.error){msg('bmsg','Something went wrong. Try again.',true);bRender();return}
+      bState='watching'; bEnd=Date.now()+CFG.watchSec*1000+1500; bRender(); return;
+    }
+    if(bState==='ready'){
+      var r=await sb.rpc('join_battle');
+      if(r.error){
+        var m=r.error.message||'';
+        msg('bmsg',m.indexOf('daily limit')>-1?'Daily battle limit reached.':m.indexOf('watch first')>-1?'Please watch the full video first.':'Something went wrong. Try again.',true);
+        bState='idle'; await refresh(); bRender(); return;
+      }
+      bId=r.data.id;
+      if(r.data.status==='done') bShow(r.data); else {bState='waiting';bRender();bPoll(0)}
+    }
   };
 
   sb.auth.onAuthStateChange(function(){setTimeout(refresh,0)});
