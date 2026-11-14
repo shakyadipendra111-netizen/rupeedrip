@@ -196,7 +196,7 @@ body.neon #login{background:rgba(15,13,35,.78);-webkit-backdrop-filter:blur(22px
   var SB_URL='https://aluonwdmxricptjjshmc.supabase.co';
   var SB_KEY='sb_publishable_GdCwJeunuMWhOkr0Ef7joQ_EYRY47i4';
   // Display only. The real rules are enforced in the database (see the SQL).
-  var CFG={reward:2,coinsPerRupee:100,minWithdrawRs:50,dailyCap:20,watchSec:15,refBonus:20,refAfter:5};
+  var CFG={reward:20,coinsPerRupee:1000,minWithdrawRs:50,dailyCap:20,watchSec:15,refBonus:200,refAfter:5};
   var REF=(new URLSearchParams(location.search).get('ref')||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,12);
 
   var sb=window.supabase.createClient(SB_URL,SB_KEY);
